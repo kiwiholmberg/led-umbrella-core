@@ -1,0 +1,5 @@
+{
+    "port": "/dev/cu.usbmodem1451",
+    "board": "adafruit:avr:feather32u4",
+    "sketch": "main/main.ino"
+}

@@ -1,7 +1,8 @@
 #include <FastLED.h>
+#include <Button.h>        //https://github.com/JChristensen/Button
 
+// LED related
 #define LED_PIN     2
-#define BUTTON_PIN  5
 #define NUM_COLUMNS 8
 #define NUM_ROWS    18
 #define NUM_LEDS    NUM_COLUMNS * NUM_ROWS
@@ -9,8 +10,16 @@
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
 #define NUMBER_OF_PALETTES 3
+#define NUMBER_OF_ANIMATIONS 2
+
+// Button related
+#define BUTTON_PIN  5
+#define BUTTON_PULLUP false
+#define BUTTON_INVERT true
+#define BUTTON_DEBOUNCE 20
 
 CRGB leds[NUM_LEDS];
+Button theButton(BUTTON_PIN, BUTTON_PULLUP, BUTTON_INVERT, BUTTON_DEBOUNCE);
 
 // Led numbers arranged in a matrix. Notice first column has reversed order, and all
 // other columns increment downwards.
@@ -41,7 +50,7 @@ int matrix[NUM_ROWS][NUM_COLUMNS] = {
 CRGBPalette16 currentPalette;
 TBlendType    currentBlending;
 int currentPaletteIndex = 0;
-int buttonReadVal = HIGH;
+int currentAnimationIndex = 0;
 
 CRGBPalette16 availablePalettes[NUMBER_OF_PALETTES] = {
   PartyColors_p, OceanColors_p, RainbowStripeColors_p
@@ -54,11 +63,11 @@ extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
 void setup() {
     delay( 3000 ); // power-up safety delay
     FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
-    FastLED.setBrightness(  BRIGHTNESS );
+    FastLED.setBrightness(BRIGHTNESS);
 
     pinMode(A0, INPUT);
 
-    currentPalette = PartyColors_p;//OceanColors_p;//RainbowStripeColors_p;
+    currentPalette = RainbowStripeColors_p;
     currentBlending = NOBLEND;
 }
 
@@ -67,34 +76,47 @@ void loop() {
   // startIndex = startIndex + 1; /* motion speed */
   startIndex = startIndex + 1;
 
-  // TODO: Debounce this button :D 
-  if (digitalRead(BUTTON_PIN) == LOW) {
-    if (currentPaletteIndex < NUMBER_OF_PALETTES - 1) {
-      currentPaletteIndex = currentPaletteIndex + 1;
+  theButton.read();
+
+  if (theButton.wasReleased()) {
+    if (currentAnimationIndex < NUMBER_OF_ANIMATIONS - 1) {
+      currentAnimationIndex = currentAnimationIndex + 1;
     } else {
-      currentPaletteIndex = 0;
+      currentAnimationIndex = 0;
     }
-    currentPalette = availablePalettes[currentPaletteIndex];
   }
   
-  FillLEDsFromPaletteColors(startIndex);
+  switch (currentAnimationIndex) {
+    case 0:
+      topToBottomScrollAnimation(startIndex);
+      break;
+    case 1:
+      circularScrollAnimation(startIndex);
+      break;
+  }
   
   FastLED.show();
   FastLED.delay(1000 / UPDATES_PER_SECOND);
 }
 
-void FillLEDsFromPaletteColors( uint8_t colorIndex)
-{
+void topToBottomScrollAnimation( uint8_t colorIndex) {
     uint8_t brightness = 255;
-    
 
     for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {  // 0...17
       for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) { // 0...7
         leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending); 
       }         
-      colorIndex += 3;  // TODO: Make local to row?
+      colorIndex += 3;
     }
-        
-    
-    
+}
+
+void circularScrollAnimation( uint8_t colorIndex) {
+    uint8_t brightness = 255;
+
+    for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) { // 0...7
+      for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {  // 0...17
+        leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending); 
+      }         
+      colorIndex += 3;
+    }
 }
