@@ -10,7 +10,7 @@
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
 #define NUMBER_OF_PALETTES 3
-#define NUMBER_OF_ANIMATIONS 2
+#define NUMBER_OF_ANIMATIONS 3
 
 // Button related
 #define BUTTON_PIN  5
@@ -73,7 +73,8 @@ void setup() {
 
 void loop() {
   static uint8_t startIndex = 0;
-  // startIndex = startIndex + 1; /* motion speed */
+
+  // Motion speed
   startIndex = startIndex + 1;
 
   theButton.read();
@@ -85,7 +86,7 @@ void loop() {
       currentAnimationIndex = 0;
     }
   }
-  
+
   switch (currentAnimationIndex) {
     case 0:
       topToBottomScrollAnimation(startIndex);
@@ -93,8 +94,11 @@ void loop() {
     case 1:
       circularScrollAnimation(startIndex);
       break;
+    case 2:
+      runningClusterAnimation(startIndex);
+      break;
   }
-  
+
   FastLED.show();
   FastLED.delay(1000 / UPDATES_PER_SECOND);
 }
@@ -104,8 +108,8 @@ void topToBottomScrollAnimation( uint8_t colorIndex) {
 
     for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {  // 0...17
       for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) { // 0...7
-        leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending); 
-      }         
+        leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+      }
       colorIndex += 3;
     }
 }
@@ -115,8 +119,55 @@ void circularScrollAnimation( uint8_t colorIndex) {
 
     for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) { // 0...7
       for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {  // 0...17
-        leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending); 
-      }         
+        leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+      }
       colorIndex += 3;
     }
+}
+
+void runningClusterAnimation (uint8_t colorIndex) {
+  uint8_t brightness = 255;
+  static uint8_t currentClusterCol = 0;
+  static uint8_t currentClusterRow = 0;
+  static uint8_t clusterMargins = 2;
+
+  for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) {
+    for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {
+
+      if (column_index == currentClusterCol && row_index == currentClusterRow) {
+        // Main col
+        leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+        // Next col
+        if (column_index >= NUM_COLUMNS) {  // On last column
+          leds[matrix[row_index][0]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+        } else {
+          leds[matrix[row_index][column_index + 1]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+        }
+        // Prev col
+        if (column_index == 0) { // On first column
+          leds[matrix[row_index][NUM_COLUMNS - 2]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+        } else {
+          leds[matrix[row_index][column_index - 1]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+        }
+      } else {
+        leds[matrix[row_index][column_index]] = CRGB::Black;
+      }
+    }
+  }
+
+  if (currentClusterRow >= NUM_ROWS - 1) {
+    currentClusterRow = 0;
+  } else if (currentClusterCol >= NUM_COLUMNS - 1) {
+    // On last column, switch to next row.
+    currentClusterRow = currentClusterRow + 1;
+  }
+
+  if (currentClusterCol >= NUM_COLUMNS - 1) {
+    // Last column
+    currentClusterCol = 0;
+  } else {
+    currentClusterCol = currentClusterCol + 1;
+  }
+
+  delay(40);
 }
