@@ -104,6 +104,7 @@ void loop() {
 }
 
 void topToBottomScrollAnimation( uint8_t colorIndex) {
+    currentPalette = RainbowStripeColors_p;
     uint8_t brightness = 255;
 
     for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {  // 0...17
@@ -115,6 +116,7 @@ void topToBottomScrollAnimation( uint8_t colorIndex) {
 }
 
 void circularScrollAnimation( uint8_t colorIndex) {
+    currentPalette = RainbowStripeColors_p;
     uint8_t brightness = 255;
 
     for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) { // 0...7
@@ -129,7 +131,8 @@ void runningClusterAnimation (uint8_t colorIndex) {
   uint8_t brightness = 255;
   static uint8_t currentClusterCol = 0;
   static uint8_t currentClusterRow = 0;
-  static uint8_t clusterMargins = 2;
+  currentPalette = RainbowColors_p;
+  static uint8_t skipCount = 0;
 
   for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) {
     for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {
@@ -155,6 +158,14 @@ void runningClusterAnimation (uint8_t colorIndex) {
     }
   }
 
+  // Regulate traversing speed
+  if (skipCount < 5) {
+    skipCount = skipCount + 1;
+    return;
+  } else {
+    skipCount = 0;
+  }
+
   if (currentClusterRow >= NUM_ROWS - 1) {
     currentClusterRow = 0;
   } else if (currentClusterCol >= NUM_COLUMNS - 1) {
@@ -168,6 +179,4 @@ void runningClusterAnimation (uint8_t colorIndex) {
   } else {
     currentClusterCol = currentClusterCol + 1;
   }
-
-  delay(40);
 }
