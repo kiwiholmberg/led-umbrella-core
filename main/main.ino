@@ -10,7 +10,7 @@
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
 #define NUMBER_OF_PALETTES 3
-#define NUMBER_OF_ANIMATIONS 3
+#define NUMBER_OF_ANIMATIONS 4
 
 // Button related
 #define BUTTON_PIN  5
@@ -52,14 +52,6 @@ TBlendType    currentBlending;
 int currentPaletteIndex = 0;
 int currentAnimationIndex = 0;
 
-CRGBPalette16 availablePalettes[NUMBER_OF_PALETTES] = {
-  PartyColors_p, OceanColors_p, RainbowStripeColors_p
-};
-
-
-extern CRGBPalette16 myRedWhiteBluePalette;
-extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
-
 void setup() {
     delay( 3000 ); // power-up safety delay
     FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
@@ -96,6 +88,9 @@ void loop() {
       break;
     case 2:
       runningClusterAnimation(startIndex);
+      break;
+    case 3:
+      pulsatingColors();
       break;
   }
 
@@ -142,15 +137,15 @@ void runningClusterAnimation (uint8_t colorIndex) {
         leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
         // Next col
         if (column_index >= NUM_COLUMNS) {  // On last column
-          leds[matrix[row_index][0]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+          leds[matrix[row_index][0]] = ColorFromPalette( currentPalette, colorIndex, brightness / 2, currentBlending);
         } else {
-          leds[matrix[row_index][column_index + 1]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+          leds[matrix[row_index][column_index + 1]] = ColorFromPalette( currentPalette, colorIndex, brightness / 2, currentBlending);
         }
         // Prev col
         if (column_index == 0) { // On first column
-          leds[matrix[row_index][NUM_COLUMNS - 2]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+          leds[matrix[row_index][NUM_COLUMNS - 2]] = ColorFromPalette( currentPalette, colorIndex, brightness / 2, currentBlending);
         } else {
-          leds[matrix[row_index][column_index - 1]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+          leds[matrix[row_index][column_index - 1]] = ColorFromPalette( currentPalette, colorIndex, brightness / 2, currentBlending);
         }
       } else {
         leds[matrix[row_index][column_index]] = CRGB::Black;
@@ -179,4 +174,26 @@ void runningClusterAnimation (uint8_t colorIndex) {
   } else {
     currentClusterCol = currentClusterCol + 1;
   }
+}
+
+void pulsatingColors () {
+  currentPalette = PartyColors_p;
+  static uint8_t brightnessDirection = 0;  // Incrementing
+  static uint8_t brightness = 100;
+  static uint8_t stepSize = 1;
+  static uint8_t pulsatingColorIndex = 0;
+
+  for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {  // 0...17
+    for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) { // 0...7
+      leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, pulsatingColorIndex, brightness, currentBlending);
+    }
+  }
+
+  if (brightness >= 250 && brightnessDirection == 0) {
+    brightnessDirection = 1;
+  } else if (brightness <= 25 && brightnessDirection == 1) {
+    brightnessDirection = 0;
+    pulsatingColorIndex = pulsatingColorIndex + 20;
+  }
+  brightness = brightnessDirection == 0 ? brightness + stepSize : brightness - stepSize;
 }
