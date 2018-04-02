@@ -75,7 +75,7 @@ void loop() {
   static uint8_t startIndex = 0;
 
   // Motion speed
-  startIndex = startIndex + 1;
+  startIndex = startIndex - 1;
 
   theButton.read();
 
@@ -116,7 +116,7 @@ void topToBottomScrollAnimation( uint8_t colorIndex) {
 }
 
 void circularScrollAnimation( uint8_t colorIndex) {
-    currentPalette = RainbowStripeColors_p;
+    currentPalette = PartyColors_p;
     uint8_t brightness = 255;
 
     for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) { // 0...7
