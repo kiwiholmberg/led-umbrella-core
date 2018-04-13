@@ -6,11 +6,10 @@
 #define NUM_COLUMNS 8
 #define NUM_ROWS    18
 #define NUM_LEDS    NUM_COLUMNS * NUM_ROWS
-#define BRIGHTNESS  20
+#define BRIGHTNESS  40
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
-#define NUMBER_OF_PALETTES 3
-#define NUMBER_OF_ANIMATIONS 4
+#define NUMBER_OF_ANIMATIONS 8
 
 // Button related
 #define BUTTON_PIN  5
@@ -52,6 +51,72 @@ TBlendType    currentBlending;
 int currentPaletteIndex = 0;
 int currentAnimationIndex = 0;
 
+// Gradient palette "bhw4_063_gp", originally from
+// http://soliton.vm.bytemark.co.uk/pub/cpt-city/bhw/bhw4/tn/bhw4_063.png.index.html
+// converted for FastLED with gammas (2.6, 2.2, 2.5)
+// Size: 76 bytes of program space.
+
+DEFINE_GRADIENT_PALETTE( bhw4_063_gp ) {
+    0,   8,  3,  1,
+   20,  50, 17,  1,
+   35,  19, 13,  5,
+   48, 242,115,  9,
+   61, 252,184, 17,
+   76, 252,114,  9,
+   89,  75, 24,  7,
+   99, 252,195, 14,
+  117,  75, 24,  7,
+  130, 210, 77,  6,
+  140, 103, 33,  3,
+  153,  10,  9,  9,
+  168, 252,213, 21,
+  186,  18,  6,  1,
+  196,  50, 17,  1,
+  209,   6,  4,  2,
+  224,  91, 87, 72,
+  242,  17,  9,  3,
+  255,   4,  1, 12}
+;
+
+extern CRGBPalette16 bhw4_063_p = bhw4_063_gp;
+
+// Gradient palette "bhw2_50_gp", originally from
+// http://soliton.vm.bytemark.co.uk/pub/cpt-city/bhw/bhw2/tn/bhw2_50.png.index.html
+// converted for FastLED with gammas (2.6, 2.2, 2.5)
+// Size: 20 bytes of program space.
+
+DEFINE_GRADIENT_PALETTE( bhw2_50_gp ) {
+    0,   8,  2, 23,
+   84,  47,  7,102,
+  138,  16, 46,147,
+  173,   2,127,203,
+  255,   1,  7, 11
+};
+
+extern CRGBPalette16 bhw2_50_p = bhw2_50_gp;
+
+// Gradient palette "bhw4_062_gp", originally from
+// http://soliton.vm.bytemark.co.uk/pub/cpt-city/bhw/bhw4/tn/bhw4_062.png.index.html
+// converted for FastLED with gammas (2.6, 2.2, 2.5)
+// Size: 44 bytes of program space.
+
+DEFINE_GRADIENT_PALETTE( bhw4_062_gp ) {
+    0,   4,  1, 12,
+   15,  10,  2, 25,
+   35,  28, 16,138,
+   63, 210,108,205,
+  107,  47, 18, 74,
+  137, 229,244,255,
+  153, 165,118,228,
+  178,  83, 53,174,
+  209,   8,  2, 42,
+  242,   1,  1, 12,
+  255,   1,  1, 12
+};
+
+extern CRGBPalette16 bhw4_062_p = bhw4_062_gp;
+
+
 void setup() {
     delay( 3000 ); // power-up safety delay
     FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
@@ -81,16 +146,28 @@ void loop() {
 
   switch (currentAnimationIndex) {
     case 0:
-      topToBottomScrollAnimation(startIndex);
+      topToBottomScrollAnimation5(startIndex);
       break;
     case 1:
       circularScrollAnimation(startIndex);
       break;
     case 2:
-      runningClusterAnimation(startIndex);
+      topToBottomScrollAnimation2(startIndex);
       break;
     case 3:
-      pulsatingColors();
+      pulsatingColorsAnimation();
+      break;
+    case 4:
+      topToBottomScrollAnimation(startIndex);
+      break;
+    case 5:
+      topToBottomScrollAnimation3(startIndex);
+      break;
+    case 6:
+      topToBottomScrollAnimation4(startIndex);
+      break;
+    case 7:
+      runningClusterAnimation(startIndex);
       break;
   }
 
@@ -100,6 +177,54 @@ void loop() {
 
 void topToBottomScrollAnimation( uint8_t colorIndex) {
     currentPalette = RainbowStripeColors_p;
+    uint8_t brightness = 255;
+
+    for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {  // 0...17
+      for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) { // 0...7
+        leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+      }
+      colorIndex += 3;
+    }
+}
+
+void topToBottomScrollAnimation2( uint8_t colorIndex) {
+    currentPalette = PartyColors_p;
+    uint8_t brightness = 255;
+
+    for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {  // 0...17
+      for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) { // 0...7
+        leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+      }
+      colorIndex += 6;
+    }
+}
+
+void topToBottomScrollAnimation3( uint8_t colorIndex) {
+    currentPalette = bhw4_063_p;
+    uint8_t brightness = 255;
+
+    for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {  // 0...17
+      for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) { // 0...7
+        leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+      }
+      colorIndex += 3;
+    }
+}
+
+void topToBottomScrollAnimation4( uint8_t colorIndex) {
+    currentPalette = bhw2_50_p;
+    uint8_t brightness = 255;
+
+    for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {  // 0...17
+      for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) { // 0...7
+        leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+      }
+      colorIndex += 3;
+    }
+}
+
+void topToBottomScrollAnimation5( uint8_t colorIndex) {
+    currentPalette = bhw4_062_p;
     uint8_t brightness = 255;
 
     for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {  // 0...17
@@ -130,9 +255,11 @@ void runningClusterAnimation (uint8_t colorIndex) {
   static uint8_t skipCount = 0;
 
   for( int column_index = 0; column_index < NUM_COLUMNS; column_index++) {
-    for ( int row_index = 0; row_index < NUM_ROWS; row_index++) {
+    for ( int row_index = 0; row_index < (NUM_ROWS - 8); row_index++) {
 
       if (column_index == currentClusterCol && row_index == currentClusterRow) {
+        // Add colors to 3 pixels in a row. The leading and trailing pixel should be faded.
+
         // Main col
         leds[matrix[row_index][column_index]] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
         // Next col
@@ -161,7 +288,7 @@ void runningClusterAnimation (uint8_t colorIndex) {
     skipCount = 0;
   }
 
-  if (currentClusterRow >= NUM_ROWS - 1) {
+  if (currentClusterRow >= (NUM_ROWS - 8) - 1) {
     currentClusterRow = 0;
   } else if (currentClusterCol >= NUM_COLUMNS - 1) {
     // On last column, switch to next row.
@@ -176,7 +303,7 @@ void runningClusterAnimation (uint8_t colorIndex) {
   }
 }
 
-void pulsatingColors () {
+void pulsatingColorsAnimation () {
   currentPalette = PartyColors_p;
   static uint8_t brightnessDirection = 0;  // Incrementing
   static uint8_t brightness = 100;

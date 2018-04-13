@@ -1,5 +1,5 @@
 {
-    "port": "/dev/cu.usbmodem1451",
+    "port": "/dev/cu.usbmodem1441",
     "board": "adafruit:avr:feather32u4",
     "sketch": "main/main.ino",
     "output": "~/tmp/arduino-build"
